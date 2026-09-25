@@ -2,6 +2,7 @@
 
 import { escapeHtml } from "../telegram.mjs";
 import { meridianIssue } from "./meridian.mjs";
+import { lpagentIssue } from "./lpagent.mjs";
 import { meteoraPoolUrl } from "./meteora.mjs";
 
 const usd = (n) => {
@@ -66,7 +67,7 @@ export function verdictLines(v, cfg) {
   T.push("");
   if (v.pools.length) {
     T.push(`DLMM pools (${v.pools.length} shown${v.hiddenPools ? ` · ${v.hiddenPools} hidden` : ""}) — by 24h fees:`);
-    v.pools.forEach(({ pool: p, study }, i) => {
+    v.pools.forEach(({ pool: p, study, live }, i) => {
       T.push(`${i + 1}. ${p.name} · fee ${p.baseFeePct}% · bin ${p.binStep} · TVL ${usd(p.tvlUsd)}`);
       T.push(`   vol 24h ${usd(p.vol24h)} · fees ${usd(p.fees24h)} · yield ${p.feeTvl24hPct.toFixed(p.feeTvl24hPct >= 10 ? 0 : 2)}%/day`);
       if (study) {
@@ -75,9 +76,16 @@ export function verdictLines(v, cfg) {
         const warn = study.profitable < study.lpers / 2 ? " ⚠️ most lost" : "";
         T.push(`   👥 top LPs ${study.profitable}/${study.lpers} profitable · median ${sg(study.medianPnlPct, 1)}% · fee ${study.medianFeePct.toFixed(1)}%${style}${last}${warn}`);
       }
+      if (live) {
+        const conc = live.top1Pct != null ? ` · #1 ${live.top1Pct.toFixed(0)}% · top2 ${live.top2Pct.toFixed(0)}%` : "";
+        const warn = live.top1Pct >= 50 ? " ⚠️ 1 wallet holds the pool" : live.top2Pct >= 70 ? " ⚠️ concentrated" : "";
+        T.push(`   🐋 live ${live.openCount} open${conc} · ${live.inRangePct.toFixed(0)}% in range · PnL ${sg(live.medianPnlPct, 1)}%${warn}`);
+      }
     });
-    const issue = meridianIssue();
-    if (issue && !v.pools.some((p) => p.study)) T.push(`ℹ️ top-LP study unavailable: Meridian ${issue} — re-check later`);
+    const mIssue = meridianIssue();
+    if (mIssue && !v.pools.some((p) => p.study)) T.push(`ℹ️ top-LP history unavailable: Meridian ${mIssue}`);
+    const lIssue = lpagentIssue();
+    if (lIssue && !v.pools.some((p) => p.live)) T.push(`ℹ️ live LPs unavailable: LP Agent ${lIssue}`);
   } else {
     T.push(v.hiddenPools
       ? `DLMM pools: all ${v.hiddenPools} filtered out (fee < ${cfg.cek.minFeePct}% or TVL < $${cfg.cek.minTvlUsd})`

@@ -10,7 +10,8 @@ Plain Node.js (`.mjs`), **zero npm dependencies**.
 - **Alerts** every `watch.intervalMs`: a table, then one line per token —
   `SYMBOL · launchpad · CA (tap to copy) · GMGN` — and a **⚖️ Cek** button per token.
 - **⚖️ Cek / `/cek <mint>`**: GMGN stats · mint & freeze authority · Token-2022 traps ·
-  DLMM pools (fee, bin step, TVL, daily yield) · top-LPer results (Agent Meridian) ·
+  DLMM pools (fee, bin step, TVL, daily yield) · top-LPer history (Agent Meridian) ·
+  live LP positions (LP Agent) ·
   Jupiter buy→sell test · chart trend · LLM verdict (APE / WATCH / SKIP).
 - **A bare mint** → LLM origin-story write-up (`ai.promptTemplate`), also on the 📖 Story button.
 
@@ -40,6 +41,7 @@ npm start                          # --serve: alerts + /cek + buttons, one proce
 | `TELEGRAM_USER_IDS` | who receives alerts and may use the bot (comma-separated) |
 | `LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL` | story write-ups and free-text prompts |
 | `CEK_LLM_URL` / `CEK_LLM_KEY` / `CEK_LLM_MODEL` | `/cek` verdict (full chat-completions URL) |
+| `LPAGENT_API_KEY` | `/cek` live LP line (🐋 open positions, top-wallet share, in-range, PnL) — optional, 5 req/min |
 | `SOL_RPC_URL`, `MERIDIAN_API_KEY`, `JUPITER_API_KEY` | optional overrides |
 
 Keep it running with pm2 (`pm2 start npm --name sol-screener -- start`) or a `screen` session.

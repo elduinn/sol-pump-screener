@@ -11,6 +11,7 @@ import { mintSafety } from "./mint.mjs";
 import { dlmmPools } from "./meteora.mjs";
 import { roundTrip } from "./jupiter.mjs";
 import { topLpStudy, chartSignal } from "./meridian.mjs";
+import { liveLps } from "./lpagent.mjs";
 import { gmgnToken } from "./gmgn.mjs";
 import { scoreToken, safety } from "./score.mjs";
 import { llmVerdict } from "./llm.mjs";
@@ -29,7 +30,7 @@ function systemPrompt(c) {
     "Weigh: (1) community clarity — genuine, non-recycled socials; (2) FOMO — momentum backed by smart money and a real narrative, or an empty pump about to fade;",
     "(3) LP risk — an LP is an AUTOMATIC BUYER as price falls, so downside matters more than upside: thin liquidity, heavy bot/bundler/sniper activity, serial-launcher devs and dev exits are red flags;",
     "(4) mint safety — mint authority ON (infinite supply), freeze authority ON (your LP can be frozen), Token-2022 transfer fee / transfer hook / permanent delegate are serious red flags;",
-    "(5) farmability — a busy DLMM pool whose fees are real: fee_tvl_24h_pct = yesterday's fees ÷ TVL (daily LP yield). top_lpers shows how the pool's biggest LPs actually did (profitable share, median PnL %); a pool where most top LPs lost money is a warning.",
+    "(5) farmability — a busy DLMM pool whose fees are real: fee_tvl_24h_pct = yesterday's fees ÷ TVL (daily LP yield). top_lpers = how the pool's biggest LPs historically did (profitable share, median PnL %); a pool where most top LPs lost money is a warning. live_lps = positions open RIGHT NOW: a high top1/top2 share of TVL means one exit can gut the pool; a negative median_live_pnl_pct means current LPs are underwater.",
     "METRICS: roundtrip_back_pct = % of SOL returned by a Jupiter buy->sell quote (>= ~97 is clean; much lower = transfer tax or very thin liquidity; no_sell_route = cannot sell).",
     "Rates are 0-1 decimals. Missing/0 data = unknown, not safe. Use only the numbers given.",
     c.thesisExtra ? `Extra operator rules: ${c.thesisExtra}` : "",
@@ -61,11 +62,16 @@ export async function tokenVerdict(cfg, mint) {
   const symbol = g?.symbol || met.token?.symbol || mint.slice(0, 6);
 
   const shownAll = met.pools.filter((p) => !p.blacklisted && p.baseFeePct >= c.minFeePct && p.tvlUsd >= c.minTvlUsd);
-  const pools = shownAll.slice(0, c.maxPools).map((pool) => ({ pool, study: null }));
+  const pools = shownAll.slice(0, c.maxPools).map((pool) => ({ pool, study: null, live: null }));
 
-  // top-LPer study on the busiest pools that actually earn fees (2 Meridian requests each)
+  // LP analysis on the busiest pools that actually earn fees: Meridian's historical top-LPer
+  // study (2 requests) + LP Agent's live open positions (1 request) — independent sources,
+  // so one being down still leaves the other.
   await Promise.all(pools.filter((p) => p.pool.fees24h > 0).slice(0, c.topLpPools).map(async (p) => {
-    p.study = await topLpStudy(env, p.pool.address).catch(() => null);
+    [p.study, p.live] = await Promise.all([
+      topLpStudy(env, p.pool.address).catch(() => null),
+      liveLps(env, p.pool.address, p.pool.tvlUsd).catch(() => null),
+    ]);
   }));
 
   const screen = g ? scoreToken(g, ms, c.thesis) : null;
@@ -121,7 +127,7 @@ export async function tokenVerdict(cfg, mint) {
       permanent_delegate: !!ms.permanentDelegate,
       non_transferable: ms.nonTransferable || ms.defaultFrozen,
     } : "unavailable",
-    dlmm_pools: pools.map(({ pool: p, study: s }) => ({
+    dlmm_pools: pools.map(({ pool: p, study: s, live: l }) => ({
       pair: p.name,
       base_fee_pct: p.baseFeePct,
       bin_step: p.binStep,
@@ -140,6 +146,15 @@ export async function tokenVerdict(cfg, mint) {
           avg_hold_hours: s.avgHoldHours != null ? r1(s.avgHoldHours) : null,
           last_activity_hours_ago: s.lastActivityMs ? Math.round((Date.now() - s.lastActivityMs) / 3_600_000) : null,
           suggested_style: s.suggested,
+        },
+      } : {}),
+      ...(l ? {
+        live_lps: {
+          open_positions: l.openCount,
+          top1_share_of_tvl_pct: l.top1Pct != null ? r1(l.top1Pct) : null,
+          top2_share_of_tvl_pct: l.top2Pct != null ? r1(l.top2Pct) : null,
+          in_range_pct: r1(l.inRangePct),
+          median_live_pnl_pct: r1(l.medianPnlPct),
         },
       } : {}),
     })),
