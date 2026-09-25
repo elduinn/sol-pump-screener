@@ -1,0 +1,32 @@
+{
+  "name": "sol-pump-screener",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Solana memecoin pump screener with 5m volume acceleration and Telegram alerts",
+  "main": "screener.mjs",
+  "scripts": {
+    "start": "node screener.mjs --serve",
+    "serve": "node screener.mjs --serve",
+    "once": "node screener.mjs",
+    "survey": "node screener.mjs --survey",
+    "params": "node screener.mjs --list-params",
+    "config": "node screener.mjs --print-config",
+    "telegram-test": "node screener.mjs --telegram-test",
+    "listen": "node screener.mjs --listen",
+    "watch": "node screener.mjs --watch",
+    "check-alerts": "node check-new-token-alerts.mjs",
+    "ai-test": "node screener.mjs --ai-test",
+    "cek": "node screener.mjs --cek"
+  },
+  "keywords": [
+    "gmgn",
+    "solana",
+    "screener",
+    "memecoin",
+    "telegram"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

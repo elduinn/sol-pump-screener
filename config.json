@@ -1,0 +1,147 @@
+{
+  "chain": "sol",
+  "cli": {
+    "bin": "gmgn-cli",
+    "timeoutMs": 60000,
+    "maxBufferMB": 32
+  },
+  "trending": {
+    "interval": "1h",
+    "orderBy": "change1h",
+    "direction": "desc",
+    "limit": 100,
+    "filters": [
+      "not_wash_trading" ],
+    "platforms": [
+      "stonkfun"
+    ],
+    "range": {
+      "min_marketcap": 250000,
+      "max_marketcap": null,
+      "min_volume": 10000,
+      "min_liquidity": 10000,
+      "max_top10_holder_rate": 0.5,
+      "min_price_change_percent": 10,
+      "min_created": "6h",
+      "max_created": "11d",
+      "min_history_highest_marketcap": null,
+      "max_history_highest_marketcap": null
+    }
+  },
+  "kline": {
+    "resolution": "5m",
+    "lookbackSec": 1800
+  },
+  "screen": {
+    "minPump1hPercent": 10,
+    "excludeTokenizedStocks": true,
+    "showVerdicts": [
+      "live",
+      "warm",
+      "cooling"
+    ],
+    "minVol5m": 25000,
+    "minVolume24h": 1000000
+  },
+  "risk": {
+    "maxRugRatio": 0.3,
+    "maxTop10HolderRate": 0.5,
+    "rejectWashTrading": true,
+    "rejectHoneypot": true
+  },
+  "fiveMinute": {
+    "enabled": true,
+    "source": "hybrid",
+    "interval": "5m",
+    "orderBy": "volume",
+    "maxKlineCalls": 8
+  },
+  "freshness": {
+    "enabled": true,
+    "resolution": "1m",
+    "lookbackMin": 70,
+    "recentWindowMin": 15,
+    "maxKlineCalls": 10,
+    "minRecentSharePercent": null,
+    "maxOffHighPercent": null,
+    "maxMoveAgeMin": null
+  },
+  "watch": {
+    "intervalMs": 300000,
+    "rateLimitBackoffMs": 300000
+  },
+  "newTokenAlerts": {
+    "enabled": false,
+    "pollIntervalMs": 60000,
+    "rateLimitBackoffMs": 300000,
+    "cooldownMin": 10,
+    "minVolume5mUsd": 30000,
+    "minTokenAgeMin": 40,
+    "maxTokenAgeMin": 75,
+    "minMarketCapUsd": null,
+    "maxMarketCapUsd": null,
+    "minLiquidityUsd": null,
+    "maxResults": 30,
+    "stateFile": "./data/new-token-alerts.json"
+  },
+  "cek": {
+    "enabled": true,
+    "thesis": "meme",
+    "thesisExtra": "",
+    "minFeePct": 0,
+    "minTvlUsd": 100,
+    "maxPools": 5,
+    "topLpPools": 2,
+    "roundTripSol": 0.05,
+    "maxLossPct": 6,
+    "chart": true,
+    "chartInterval": "15_MINUTE"
+  },
+  "output": {
+    "showAddresses": true,
+    "json": false,
+    "columns": [
+      "symbol",
+      "volume",
+      "vol5m",
+      "liquidity",
+      "pump1h",
+      "pump5m",
+      "smartMoney",
+      "when"
+    ]
+  },
+  "telegram": {
+    "enabled": true,
+    "envFile": "./.env",
+    "tokenEnvVar": "TELEGRAM_BOT_TOKEN",
+    "chatIdsEnvVar": "TELEGRAM_USER_IDS",
+    "chatIds": [],
+    "parseMode": "Markdown",
+    "silent": false,
+    "sendWhenEmpty": false,
+    "includeAddresses": true,
+    "timeoutMs": 15000,
+    "cooldownMin": 60,
+    "cooldownStateFile": "./data/screener-alerts.json"
+  },
+  "ai": {
+    "enabled": true,
+    "envFile": "./.env",
+    "baseUrlEnvVar": "LLM_BASE_URL",
+    "apiKeyEnvVar": "LLM_API_KEY",
+    "modelEnvVar": "LLM_MODEL",
+    "baseUrl": null,
+    "apiKey": null,
+    "model": null,
+    "temperature": 0.2,
+    "maxTokens": 20000,
+    "timeoutMs": 240000,
+    "promptTemplate": "You are an expert Solana memecoin analyst and on-chain sleuth. Your job is to analyze the cultural narrative and background story of crypto tokens. Please search the web for the token with the Solana mint address: `{address}`. Format your response for Telegram. Keep it concise, punchy, and use bullet points. Please provide:\n\n*The memecoin name\n* Origin Story: How and why was this token created?\n* The Narrative: What is the core meme or community driving this?\n* Vibe Check: Is the sentiment bullish, cult-like, or fading?\n* Red Flags: Any obvious warnings in the narrative or origin?",
+    "reasoningEffort": "low",
+    "provider": "auto",
+    "webSearch": true,
+    "maxWebSearches": 5,
+    "maxPauseResumes": 3
+  }
+}
